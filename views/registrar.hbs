@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/form.css">
+    <title>Peajes</title>
+</head>
+
+<body>
+    <h1>Peajes</h1>
+
+    <form id="formulario">
+        <label for="placa">Placa:</label>
+        <input type="text" id="placa">
+
+        <label for="nombrePeaje">Nombre del Peaje:</label>
+        <select id="nombrePeaje" onchange="buscarValorPeaje()">
+            <!-- Opciones se llenarán dinámicamente -->
+        </select>
+
+        <label for="idCategoriaTarifa">Categoría:</label>
+        <select id="idCategoriaTarifa" onchange="buscarValorPeaje()">
+            <option value="I">I</option>
+            <option value="II">II</option>
+            <option value="III">III</option>
+            <option value="IV">IV</option>
+            <option value="V">V</option>
+        </select>
+
+        <label for="fecha">Fecha y Hora:</label>
+        <input type="datetime-local" class="form-control" id="fecha" required style="width: calc(100% - 10px); padding: 8px; margin-bottom: 10px; font-size: 16px;">
+
+        <label for="valor">Valor del Peaje:</label>
+        <input type="text" id="valor" readonly disabled>
+
+        <button type="submit">Guardar</button>
+    </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/registrar.js"></script>
+    <script>
+        let peajesData = [];
+
+        document.addEventListener('DOMContentLoaded', function () {
+            axios.get('https://www.datos.gov.co/resource/7gj8-j6i3.json')
+                .then(function (response) {
+                    peajesData = response.data;
+                    let selectPeajes = document.getElementById('nombrePeaje');
+
+                    let peajesUnicos = new Set();
+
+                    peajesData.forEach(function (peaje) {
+                        if (peaje.peaje) {
+                            peajesUnicos.add(peaje.peaje);
+                        }
+                    });
+
+                    peajesUnicos.forEach(function (peaje) {
+                        var option = document.createElement('option');
+                        option.value = peaje;
+                        option.textContent = peaje;
+                        selectPeajes.appendChild(option);
+                    });
+                })
+                .catch(function (error) {
+                    console.error('Error al obtener la lista de peajes:', error);
+                });
+        });
+
+        function buscarValorPeaje() {
+            let nombrePeaje = document.getElementById('nombrePeaje').value;
+            let categoriaTarifa = document.getElementById('idCategoriaTarifa').value;
+            let valor = document.getElementById('valor');
+
+            let valorEncontrado = null;
+
+            for (let i = 0; i < peajesData.length; i++) {
+                let peaje = peajesData[i];
+                if (peaje.peaje === nombrePeaje && peaje.idcategoriatarifa === categoriaTarifa) {
+                    valorEncontrado = peaje.valor;
+                    break;
+                }
+            }
+
+            if (valorEncontrado !== null) {
+                valor.value = valorEncontrado;
+            } else {
+                valor.value = 'Valor no encontrado';
+            }
+        }
+
+    </script>
+</body>
+
+</html>
